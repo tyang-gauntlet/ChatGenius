@@ -8,8 +8,7 @@ import { usePresence } from '@/hooks/use-presence'
 interface User {
   id: string
   username: string
-  status: string
-  lastSeen: string
+  updatedAt: string
 }
 
 export function UserList({ users: initialUsers }: { users: User[] }) {
