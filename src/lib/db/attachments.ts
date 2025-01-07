@@ -23,4 +23,8 @@ export async function validateFileAttachment(
   }
 
   return true
+}
+
+export async function uploadFile(file: File): Promise<string> {
+  // Implementation
 } 

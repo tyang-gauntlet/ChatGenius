@@ -22,6 +22,8 @@ model User {
   messages      Message[]
   threads       Thread[]
   reactions     Reaction[]
+  sentMessages     DirectMessage[] @relation("SentMessages")
+  receivedMessages DirectMessage[] @relation("ReceivedMessages")
 }
 
 // Channel model - represents chat channels
@@ -79,4 +81,15 @@ model Reaction {
   user      User     @relation(fields: [userId], references: [id])
   message   Message? @relation(fields: [messageId], references: [id])
   thread    Thread?  @relation(fields: [threadId], references: [id])
+}
+
+// DirectMessage model - represents direct messages
+model DirectMessage {
+  id         String   @id @default(cuid())
+  content    String
+  createdAt  DateTime @default(now())
+  fromUserId String
+  toUserId   String
+  fromUser   User     @relation("SentMessages", fields: [fromUserId], references: [id])
+  toUser     User     @relation("ReceivedMessages", fields: [toUserId], references: [id])
 } 

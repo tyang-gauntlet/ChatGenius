@@ -10,10 +10,7 @@ export default async function ChannelsLayout({
   children: React.ReactNode
 }) {
   const session = await getServerSession(authOptions)
-
-  if (!session) {
-    redirect('/login')
-  }
+  if (!session) redirect('/login')
 
   return (
     <div className="relative flex min-h-screen flex-col">
