@@ -1,0 +1,156 @@
+// Database schema for ChatGenius
+// Using SQLite for development
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// User model - core user information and authentication
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String    // Hashed password
+  image         String?   // Avatar URL
+  status        String?   // User's current status message
+  isOnline      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  channels      ChannelMember[]
+  messages      Message[]
+  reactions     Reaction[]
+  sentDMs       DirectMessage[] @relation("SentMessages")
+  receivedDMs   DirectMessage[] @relation("ReceivedMessages")
+  fileUploads   FileAttachment[]
+  threadReplies ThreadReply[]
+}
+
+// Channel model - represents chat channels
+model Channel {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  isPrivate   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  members     ChannelMember[]
+  messages    Message[]
+}
+
+// ChannelMember - manages channel membership and roles
+model ChannelMember {
+  id        String    @id @default(cuid())
+  role      String    @default("MEMBER") // OWNER, ADMIN, MEMBER
+  joinedAt  DateTime  @default(now())
+  
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  channel   Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId String
+
+  @@unique([userId, channelId])
+}
+
+// Message model - represents messages in channels
+model Message {
+  id        String    @id @default(cuid())
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isEdited  Boolean   @default(false)
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  channel   Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId String
+
+  // Related entities
+  reactions    Reaction[]
+  attachments  FileAttachment[]
+  threadReplies ThreadReply[]
+}
+
+// DirectMessage - for private messages between users
+model DirectMessage {
+  id        String    @id @default(cuid())
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isEdited  Boolean   @default(false)
+
+  // Relations
+  sender    User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId  String
+  receiver  User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId String
+
+  // Related entities
+  attachments FileAttachment[]
+}
+
+// ThreadReply - for message threads/replies
+model ThreadReply {
+  id        String    @id @default(cuid())
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isEdited  Boolean   @default(false)
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  message   Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId String
+
+  // Related entities
+  attachments FileAttachment[]
+}
+
+// Reaction - for message reactions/emojis
+model Reaction {
+  id        String    @id @default(cuid())
+  emoji     String
+  createdAt DateTime  @default(now())
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  message   Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId String
+
+  @@unique([userId, messageId, emoji])
+}
+
+// FileAttachment - for managing file uploads
+model FileAttachment {
+  id          String    @id @default(cuid())
+  filename    String
+  url         String
+  fileType    String
+  size        Int
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  message     Message?  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId   String?
+  directMessage DirectMessage? @relation(fields: [directMessageId], references: [id], onDelete: Cascade)
+  directMessageId String?
+  threadReply ThreadReply? @relation(fields: [threadReplyId], references: [id], onDelete: Cascade)
+  threadReplyId String?
+
+  @@index([messageId])
+  @@index([directMessageId])
+  @@index([threadReplyId])
+} 
