@@ -32,14 +32,42 @@ export async function GET(
             username: true,
           },
         },
+        Reaction: {
+          include: {
+            user: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       take: 50,
     })
 
+    // Transform reactions into grouped format
+    const transformedMessages = messages.map(message => ({
+      ...message,
+      reactions: Object.entries(
+        message.Reaction.reduce((acc, reaction) => {
+          acc[reaction.emoji] = acc[reaction.emoji] || { count: 0, hasReacted: false }
+          acc[reaction.emoji].count++
+          if (reaction.user.id === session?.user.id) {
+            acc[reaction.emoji].hasReacted = true
+          }
+          return acc
+        }, {} as Record<string, { count: number; hasReacted: boolean }>)
+      ).map(([emoji, data]) => ({
+        emoji,
+        count: data.count,
+        hasReacted: data.hasReacted,
+      })),
+    }))
+
     sendSSEEvent(controller, { 
       type: 'messages', 
-      data: messages.reverse()
+      data: transformedMessages.reverse()
     })
 
     // Watch for changes
@@ -53,14 +81,42 @@ export async function GET(
               username: true,
             },
           },
+          Reaction: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                },
+              },
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
         take: 50,
       })
       
+      // Transform reactions into grouped format
+      const transformedUpdatedMessages = updatedMessages.map(message => ({
+        ...message,
+        reactions: Object.entries(
+          message.Reaction.reduce((acc, reaction) => {
+            acc[reaction.emoji] = acc[reaction.emoji] || { count: 0, hasReacted: false }
+            acc[reaction.emoji].count++
+            if (reaction.user.id === session?.user.id) {
+              acc[reaction.emoji].hasReacted = true
+            }
+            return acc
+          }, {} as Record<string, { count: number; hasReacted: boolean }>)
+        ).map(([emoji, data]) => ({
+          emoji,
+          count: data.count,
+          hasReacted: data.hasReacted,
+        })),
+      }))
+
       sendSSEEvent(controller, { 
         type: 'messages', 
-        data: updatedMessages.reverse()
+        data: transformedUpdatedMessages.reverse()
       })
     }, 1000)
 
