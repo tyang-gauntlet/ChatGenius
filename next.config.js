@@ -8,7 +8,14 @@ const nextConfig = {
     return config
   },
   experimental: {
-    serverActions: true,
+    turbo: {
+        rules: {
+          '*.svg': {
+            loaders: ['@svgr/webpack'],
+            as: '*.js',
+          },
+        },
+      },
   },
   typescript: {
     ignoreBuildErrors: true,

@@ -1,56 +1,58 @@
-import { hash } from 'bcryptjs'
-import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import bcrypt from 'bcryptjs'
+import { db } from '@/lib/db'
 
 const registerSchema = z.object({
-  username: z.string().min(3),
+  username: z.string().min(3).max(20),
+  password: z.string().min(6),
   email: z.string().email(),
-  password: z.string().min(8),
 })
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json()
-    const { username, email, password } = registerSchema.parse(body)
+    const body = await request.json()
+    const { username, password } = registerSchema.parse(body)
 
-    // Check if user already exists
-    const existingUser = await db.user.findFirst({
-      where: {
-        OR: [
-          { email },
-          { username }
-        ]
-      }
+    // Check if username already exists
+    const existingUser = await db.user.findUnique({
+      where: { username },
     })
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'User already exists' },
+        { error: 'Username already exists' },
         { status: 400 }
       )
     }
 
     // Hash password
-    const hashedPassword = await hash(password, 12)
+    const hashedPassword = await bcrypt.hash(password, 10)
 
     // Create user
     const user = await db.user.create({
       data: {
         username,
-        email,
         password: hashedPassword,
+        email: username + '@chatgenius.local',
       },
     })
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user
-
-    return NextResponse.json(userWithoutPassword, { status: 201 })
+    return NextResponse.json(
+      { message: 'User created successfully' },
+      { status: 201 }
+    )
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      )
+    }
+
     console.error('Registration error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to create user' },
       { status: 500 }
     )
   }

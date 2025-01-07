@@ -31,7 +31,6 @@ We are building a Slack clone mvp application.
 - [ ] User can join an existing channel
 - [ ] User can send messages to a channel
 - [ ] User can see messages in a channel
-- [ ] User can leave a channel
 - [ ] User can delete a channel
 - [ ] User can send direct messages to other users
 - [ ] User can see direct messages to other users

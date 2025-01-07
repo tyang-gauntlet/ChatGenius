@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { formatDistanceToNow } from 'date-fns'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { format } from 'date-fns'
 
 interface DirectMessage {
   id: string
@@ -12,7 +12,6 @@ interface DirectMessage {
   fromUser: {
     id: string
     username: string
-    image?: string | null
   }
 }
 
@@ -41,7 +40,6 @@ export function MessageList({ userId }: MessageListProps) {
     return () => clearInterval(interval)
   }, [userId])
 
-  // Scroll to bottom when messages update
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' })
@@ -54,14 +52,13 @@ export function MessageList({ userId }: MessageListProps) {
         {messages.map((message) => (
           <div key={message.id} className="flex items-start gap-4">
             <Avatar>
-              <AvatarImage src={message.fromUser.image || ''} />
-              <AvatarFallback>{message.fromUser.username[0]}</AvatarFallback>
+              <AvatarFallback>{message.fromUser.username[0].toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="grid gap-1">
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{message.fromUser.username}</span>
                 <span className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
+                  {format(new Date(message.createdAt), 'h:mm a')}
                 </span>
               </div>
               <p className="text-sm">{message.content}</p>

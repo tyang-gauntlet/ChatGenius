@@ -2,20 +2,20 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Hash } from 'lucide-react'
+import { useSSE } from '@/hooks/use-sse'
 
 interface Channel {
   id: string
   name: string
 }
 
-interface ChannelListProps {
-  channels: Channel[]
-}
-
-export function ChannelList({ channels }: ChannelListProps) {
+export function ChannelList({ channels: initialChannels }: { channels: Channel[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const selectedChannelId = searchParams.get('channel')
+
+  // Use SSE for real-time updates
+  const channels = useSSE<Channel[]>('/api/channels/sse', initialChannels)
 
   const handleChannelClick = (channelId: string) => {
     router.push(`/channels?channel=${channelId}`)

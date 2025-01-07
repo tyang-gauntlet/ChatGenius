@@ -12,13 +12,6 @@ async function ChannelSection() {
   if (!session) return null
 
   const channels = await db.channel.findMany({
-    where: {
-      members: {
-        some: {
-          id: session.user.id
-        }
-      }
-    },
     select: {
       id: true,
       name: true,
@@ -44,11 +37,15 @@ async function UserSection() {
     select: {
       id: true,
       username: true,
+      updatedAt: true,
     },
     orderBy: {
       username: 'asc'
     }
-  })
+  }).then(users => users.map(user => ({
+    ...user,
+    updatedAt: user.updatedAt.toISOString()
+  })))
 
   return <UserList users={users} />
 }

@@ -24,6 +24,8 @@ model User {
   reactions     Reaction[]
   sentMessages     DirectMessage[] @relation("SentMessages")
   receivedMessages DirectMessage[] @relation("ReceivedMessages")
+  status    String   @default("offline") // "online", "offline", "away"
+  lastSeen  DateTime @default(now())
 }
 
 // Channel model - represents chat channels

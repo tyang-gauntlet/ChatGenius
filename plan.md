@@ -1,6 +1,6 @@
 # ChatGenius Development Plan
 
-1. Set up Next.js project with TypeScript, TailwindCSS, Shadcn components and configure dark mode
+1. Set up Shadcn components and configure dark mode
 
 2. Design and implement database schema for users, channels, messages, threads, reactions and file attachments
 

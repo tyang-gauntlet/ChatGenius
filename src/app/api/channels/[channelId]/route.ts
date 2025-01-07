@@ -1,11 +1,17 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { z } from 'zod'
 import { db } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
 
-export async function GET(
-  req: Request,
-  { params }: { params: { channelId: string } }
+const channelSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+})
+
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ channelId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -13,45 +19,46 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const channel = await db.channel.findUnique({
-      where: { id: params.channelId },
-      include: {
-        members: {
-          select: {
-            id: true,
-          },
-        },
-        messages: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 50,
-        },
-      },
+    const { channelId } = await context.params
+    const body = await request.json()
+    const { name, description } = channelSchema.parse(body)
+
+    const updatedChannel = await db.channel.update({
+      where: { id: channelId },
+      data: { name, description },
     })
 
-    if (!channel) {
-      return NextResponse.json({ error: 'Channel not found' }, { status: 404 })
-    }
-
-    const isMember = channel.members.some(member => member.id === session.user.id)
-    if (!isMember) {
-      return NextResponse.json({ error: 'Not a member' }, { status: 403 })
-    }
-
-    return NextResponse.json(channel)
+    return NextResponse.json(updatedChannel)
   } catch (error) {
-    console.error('Channel fetch error:', error)
+    console.error('Channel update error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to update channel' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ channelId: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { channelId } = await context.params
+
+    await db.channel.delete({
+      where: { id: channelId },
+    })
+
+    return new Response(null, { status: 204 })
+  } catch (error) {
+    console.error('Channel delete error:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete channel' },
       { status: 500 }
     )
   }

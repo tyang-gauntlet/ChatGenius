@@ -1,5 +1,5 @@
 import * as React from "react"
-import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
+import type { ToastProps } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -8,7 +8,7 @@ type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
-  action?: ToastActionElement
+  action?: React.ReactNode
 }
 
 const actionTypes = {
@@ -24,8 +24,6 @@ function genId() {
   count = (count + 1) % Number.MAX_VALUE
   return count.toString()
 }
-
-type ActionType = (typeof actionTypes)[keyof typeof actionTypes]
 
 type Action =
   | {
