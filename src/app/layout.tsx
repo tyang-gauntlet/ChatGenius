@@ -1,13 +1,14 @@
 import { Inter } from "next/font/google"
+import { ThemeProvider } from "@/components/providers/theme-provider"
+import AuthProvider from "@/components/providers/session-provider"
+import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { SessionProvider } from '@/components/providers/session-provider'
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
   title: "ChatGenius",
-  description: "Real-time chat application",
+  description: "A modern chat application",
 }
 
 export default function RootLayout({
@@ -24,9 +25,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>
+          <AuthProvider>
             {children}
-          </SessionProvider>
+            <Toaster />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
